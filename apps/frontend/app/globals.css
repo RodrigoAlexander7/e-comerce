@@ -1,26 +1,175 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Sistema de diseno de Atlas Sport
+   --------------------------------------------------------------------------
+   Retail deportivo de alto rendimiento. Rejilla suiza, contraste alto,
+   espacio en blanco generoso y una paleta monocromatica en la que el unico
+   color saturado es el acento reservado a las llamadas a la accion primarias.
+
+   Todo color de la interfaz sale de un token de esta hoja. Ningun componente
+   escribe un hexadecimal suelto: cambiar la marca debe ser cambiar este
+   bloque, no rastrear literales por todo el codigo.
+   ========================================================================== */
+
+@theme {
+  /* --- Escala monocromatica -------------------------------------------- */
+  /* Los contrastes estan verificados contra papel blanco:
+     ink 19.8:1, graphite 10.4:1, steel 7.7:1, muted 4.8:1 (AA texto normal).
+     ash 2.6:1 NO alcanza AA: es exclusivamente para bordes y separadores. */
+  --color-paper: #ffffff;
+  --color-canvas: #fafafa;
+  --color-mist: #f4f4f5;
+  --color-line: #e4e4e7;
+  --color-ash: #a1a1aa;
+  --color-muted: #71717a;
+  --color-steel: #52525b;
+  --color-graphite: #3f3f46;
+  --color-ink: #0a0a0a;
+
+  /* --- Acento ----------------------------------------------------------- */
+  /* Unico color saturado del sistema. Reservado a CTAs primarias, anillos de
+     foco y senales de oferta. 5.18:1 sobre texto blanco, cumple AA. */
+  --color-accent: #c2410c;
+  --color-accent-strong: #9a3412;
+
+  /* --- Estado ----------------------------------------------------------- */
+  --color-danger: #b91c1c;
+  --color-success: #15803d;
+
+  /* --- Tipografia -------------------------------------------------------- */
+  /* Barlow Condensed da el impacto de rotulo deportivo en los titulares;
+     Barlow, su hermana de ancho normal, sostiene la lectura larga. */
+  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  --font-sans: var(--font-barlow), system-ui, sans-serif;
+
+  /* --- Ritmo vertical ---------------------------------------------------- */
+  /* Escala espaciosa: el producto necesita aire alrededor para respirar. */
+  --spacing-section: 6rem;
+  --spacing-section-lg: 9rem;
+
+  /* --- Movimiento -------------------------------------------------------- */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Titulares: condensada, peso alto, interletrado cerrado y caja alta.
+   Es la firma visual de la marca deportiva. */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+/* Etiquetas menudas: caja alta con interletrado abierto para que sigan
+   siendo legibles a 12 px. */
+.label-caps {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   Accesibilidad
+   -------------------------------------------------------------------------- */
+
+/* Anillo de foco visible y consistente. Nunca se elimina el indicador: se
+   sustituye por uno mejor que el del navegador. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+/* Enlace de salto para navegacion por teclado. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  padding: 0.75rem 1.25rem;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+/* Respeta a quien pide menos movimiento: la animacion es decorativa y su
+   ausencia no debe ocultar contenido. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Utilidades de composicion
+   -------------------------------------------------------------------------- */
+
+/* Ancho de lectura y margenes laterales unicos para toda la tienda. */
+.shell {
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .shell {
+    padding-inline: 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .shell {
+    padding-inline: 4rem;
+  }
+}
+
+/* Revelado al entrar en pantalla. Se aplica solo cuando JavaScript marca el
+   elemento, de modo que sin JS el contenido se ve igualmente. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise {
+  animation: rise 0.35s var(--ease-out-quart) both;
 }
