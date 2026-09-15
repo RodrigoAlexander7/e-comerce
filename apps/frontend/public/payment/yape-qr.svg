@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img"
+     aria-label="Espacio reservado para el codigo QR de Yape del negocio">
+  <title>Codigo QR de Yape pendiente de cargar</title>
+  <rect width="240" height="240" fill="#ffffff"/>
+  <rect x="8" y="8" width="224" height="224" fill="none" stroke="#e4e4e7" stroke-width="2"
+        stroke-dasharray="8 6"/>
+  <!-- Marcas de posicion de un QR, para que el hueco se lea como tal. -->
+  <g fill="#a1a1aa">
+    <rect x="32" y="32" width="44" height="44"/><rect x="42" y="42" width="24" height="24" fill="#ffffff"/>
+    <rect x="48" y="48" width="12" height="12"/>
+    <rect x="164" y="32" width="44" height="44"/><rect x="174" y="42" width="24" height="24" fill="#ffffff"/>
+    <rect x="180" y="48" width="12" height="12"/>
+    <rect x="32" y="164" width="44" height="44"/><rect x="42" y="174" width="24" height="24" fill="#ffffff"/>
+    <rect x="48" y="180" width="12" height="12"/>
+  </g>
+  <text x="120" y="126" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif"
+        font-size="15" font-weight="700" letter-spacing="1.2" fill="#71717a">QR PENDIENTE</text>
+  <text x="120" y="146" text-anchor="middle" font-family="Barlow, Arial, sans-serif"
+        font-size="10" fill="#a1a1aa">Sustituir por el QR del negocio</text>
+</svg>

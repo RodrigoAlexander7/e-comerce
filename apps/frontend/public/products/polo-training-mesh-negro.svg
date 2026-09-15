@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="Polo Training Mesh en color negro">
+  <title>Polo Training Mesh en color negro</title>
+  <rect width="800" height="1000" fill="#F4F4F5"/>
+  <g opacity="0.28"><path d="M256 300 L330 250 Q400 292 470 250 L544 300 L610 372 L556 424 L520 386 L520 760 Q400 782 280 760 L280 386 L244 424 L190 372 Z" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/></g>
+  <path d="M256 300 L330 250 Q400 292 470 250 L544 300 L610 372 L556 424 L520 386 L520 760 Q400 782 280 760 L280 386 L244 424 L190 372 Z" fill="#0A0A0A" fill-opacity="0.96"/>
+  <g opacity="0.45"><path d="M330 250 Q400 316 470 250" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" /><path d="M400 300 L400 372" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" /></g>
+  <text x="48" y="952" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="34" font-weight="700" letter-spacing="1.5" fill="#71717A">POLO TRAINING MESH</text>
+</svg>

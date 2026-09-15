@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="Short Running Pace en color gris jaspeado">
+  <title>Short Running Pace en color gris jaspeado</title>
+  <rect width="800" height="1000" fill="#F4F4F5"/>
+  <g opacity="0.28"><path d="M282 300 L518 300 L534 430 L520 640 L424 640 L400 500 L376 640 L280 640 L266 430 Z" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/></g>
+  <path d="M282 300 L518 300 L534 430 L520 640 L424 640 L400 500 L376 640 L280 640 L266 430 Z" fill="#8A8A8E" fill-opacity="0.96"/>
+  <g opacity="0.45"><path d="M282 340 L518 340" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" /><path d="M400 350 L400 470" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" /></g>
+  <text x="48" y="952" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="34" font-weight="700" letter-spacing="1.5" fill="#71717A">SHORT RUNNING PACE</text>
+</svg>

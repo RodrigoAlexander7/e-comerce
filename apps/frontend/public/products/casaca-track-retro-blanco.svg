@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="Casaca Track Retro en color blanco">
+  <title>Casaca Track Retro en color blanco</title>
+  <rect width="800" height="1000" fill="#F4F4F5"/>
+  <g opacity="0.35"><path d="M252 300 L332 248 L400 286 L468 248 L548 300 L616 380 L558 438 L522 400 L522 790 Q400 812 278 790 L278 400 L242 438 L184 380 Z" fill="none" stroke="#0A0A0A" stroke-width="4" stroke-linejoin="round"/></g>
+  <path d="M252 300 L332 248 L400 286 L468 248 L548 300 L616 380 L558 438 L522 400 L522 790 Q400 812 278 790 L278 400 L242 438 L184 380 Z" fill="#FFFFFF" fill-opacity="0.96"/>
+  <g opacity="0.45"><path d="M332 248 L400 286 L468 248" stroke="#0A0A0A" stroke-width="3" fill="none" stroke-linecap="round" /><path d="M400 286 L400 790" stroke="#0A0A0A" stroke-width="3" fill="none" stroke-linecap="round" /><path d="M278 596 L346 596 M522 596 L454 596" stroke="#0A0A0A" stroke-width="3" fill="none" stroke-linecap="round" /></g>
+  <text x="48" y="952" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="34" font-weight="700" letter-spacing="1.5" fill="#71717A">CASACA TRACK RETRO</text>
+</svg>

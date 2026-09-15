@@ -1,0 +1,429 @@
+// Modelo de datos de Atlas Sport.
+// Esta es la capa de persistencia: vive en infraestructura y se traduce a
+// entidades de dominio mediante mappers. Los casos de uso nunca la importan.
+//
+// Convencion monetaria: todo importe se guarda como entero en centimos de PEN
+// para evitar errores de coma flotante. El desglose fiscal peruano (IGV 18%)
+// se calcula sobre precios que YA incluyen impuesto.
+
+// Generador ESM de Prisma 7. El backend es ESM puro ("type": "module" con
+// moduleResolution nodenext), por lo que el generador legacy prisma-client-js
+// (CommonJS) no sirve: no expone exports nombrados.
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/shared/infrastructure/prisma/generated"
+  moduleFormat    = "esm"
+  runtime         = "nodejs"
+  importFileExtension = "js"
+}
+
+// La URL de conexion se define en prisma.config.ts (Prisma 7 ya no la
+// admite aqui). El cliente se construye con un driver adapter sobre "pg".
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Usuarios y control de acceso
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPERADMIN
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique @db.VarChar(255)
+  name      String   @db.VarChar(160)
+  phone     String?  @db.VarChar(32)
+  role      UserRole @default(CUSTOMER)
+  avatarUrl String?  @db.VarChar(512)
+
+  // Identidad federada. La plataforma no almacena contrasenas: el unico
+  // mecanismo de acceso es OAuth con Google.
+  googleId String? @unique @db.VarChar(64)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders          Order[]
+  addresses       SavedAddress[]
+  statusChanges   OrderStatusHistory[]
+  settingsEdits   StoreSettings[]
+  uploads         MediaAsset[]
+
+  @@index([role])
+  @@map("users")
+}
+
+// Direcciones reutilizables de un usuario registrado. Las ordenes NO apuntan
+// aqui: guardan su propia copia inmutable (ver OrderAddress).
+model SavedAddress {
+  id        String  @id @default(uuid()) @db.Uuid
+  userId    String  @db.Uuid
+  label     String? @db.VarChar(80)
+  country   String  @db.VarChar(80)
+  state     String  @db.VarChar(80)
+  city      String  @db.VarChar(80)
+  district  String  @db.VarChar(80)
+  street    String  @db.VarChar(255)
+  apartment String? @db.VarChar(120)
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_addresses")
+}
+
+// ---------------------------------------------------------------------------
+// Catalogo
+// ---------------------------------------------------------------------------
+
+model Category {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @db.VarChar(120)
+  slug        String  @unique @db.VarChar(140)
+  description String? @db.Text
+  position    Int     @default(0)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@index([isActive, position])
+  @@map("categories")
+}
+
+model Product {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @db.VarChar(180)
+  slug        String  @unique @db.VarChar(200)
+  description String  @db.Text
+  categoryId  String  @db.Uuid
+
+  // Precio de lista CON IGV incluido, en centimos. Cada variante puede
+  // sobrescribirlo si su precio difiere del precio base del producto.
+  basePriceCents Int
+
+  // Precio anterior tachado, para prendas en promocion.
+  compareAtPriceCents Int?
+
+  isActive   Boolean @default(true)
+  isFeatured Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images   ProductImage[]
+  variants ProductVariant[]
+
+  @@index([categoryId, isActive])
+  @@index([isActive, isFeatured])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String  @id @default(uuid()) @db.Uuid
+  productId String  @db.Uuid
+  url       String  @db.VarChar(512)
+  alt       String  @db.VarChar(255)
+  position  Int     @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, position])
+  @@map("product_images")
+}
+
+// Unidad real de venta e inventario. El stock vive aqui, nunca en Product.
+model ProductVariant {
+  id        String @id @default(uuid()) @db.Uuid
+  productId String @db.Uuid
+  sku       String @unique @db.VarChar(64)
+
+  // Talla libre para admitir tanto letras (S, M, L) como numeros (28, 30, 32)
+  // sin migrar el esquema. La lista permitida se valida en la capa de dominio.
+  size String @db.VarChar(16)
+
+  colorName String @db.VarChar(60)
+  colorHex  String @db.VarChar(7)
+
+  stock             Int  @default(0)
+  lowStockThreshold Int  @default(5)
+  priceCents        Int?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  items   OrderItem[]
+
+  @@unique([productId, size, colorName])
+  @@index([productId, isActive])
+  @@index([stock])
+  @@map("product_variants")
+}
+
+// ---------------------------------------------------------------------------
+// Entrega
+// ---------------------------------------------------------------------------
+
+model ShippingMethod {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @db.VarChar(120)
+  description String  @db.Text
+  priceCents  Int
+  position    Int     @default(0)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([isActive, position])
+  @@map("shipping_methods")
+}
+
+// ---------------------------------------------------------------------------
+// Ordenes
+// ---------------------------------------------------------------------------
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  YAPE_PLIN
+  BANK_TRANSFER
+}
+
+enum IdentificationType {
+  DNI
+  CE
+  PASSPORT
+  RUC
+}
+
+enum AddressKind {
+  SHIPPING
+  BILLING
+}
+
+model Order {
+  id     String @id @default(uuid()) @db.Uuid
+  // Codigo publico legible que ve el cliente, por ejemplo S02415.
+  number String @unique @db.VarChar(20)
+
+  // Nulo en guest checkout. Se rellena si el invitado se registra despues,
+  // vinculando la orden a su cuenta recien creada.
+  userId String? @db.Uuid
+
+  status        OrderStatus   @default(PENDING_PAYMENT)
+  paymentMethod PaymentMethod
+
+  // Copia inmutable de los datos del cliente en el momento de la compra.
+  // Si el usuario luego cambia su perfil, la orden conserva lo que declaro.
+  customerName  String             @db.VarChar(160)
+  customerEmail String             @db.VarChar(255)
+  customerPhone String             @db.VarChar(32)
+  idType        IdentificationType
+  idNumber      String             @db.VarChar(20)
+
+  // Facturacion corporativa. Solo se completa si el cliente pidio factura.
+  needsInvoice Boolean @default(false)
+  businessName String? @db.VarChar(200)
+  ruc          String? @db.VarChar(11)
+
+  shippingMethodId   String @db.Uuid
+  shippingMethodName String @db.VarChar(120)
+
+  // Desglose congelado al confirmar. subtotal y shipping van SIN IGV;
+  // taxCents es el IGV agregado; total es lo que el cliente paga.
+  subtotalCents Int
+  shippingCents Int
+  taxCents      Int
+  totalCents    Int
+  taxRateBps    Int @default(1800)
+
+  // Plazo para acreditar el pago offline antes de liberar el stock.
+  paymentDueAt DateTime
+  paidAt       DateTime?
+  cancelledAt  DateTime?
+
+  customerNote String? @db.Text
+  adminNote    String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user           User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  shippingMethod ShippingMethod       @relation(fields: [shippingMethodId], references: [id], onDelete: Restrict)
+  items          OrderItem[]
+  addresses      OrderAddress[]
+  statusHistory  OrderStatusHistory[]
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@index([customerEmail])
+  @@map("orders")
+}
+
+model OrderItem {
+  id      String @id @default(uuid()) @db.Uuid
+  orderId String @db.Uuid
+
+  // La variante puede desaparecer del catalogo; la orden debe seguir siendo
+  // legible, por eso se guarda una descripcion textual de lo comprado.
+  variantId String? @db.Uuid
+
+  productName  String @db.VarChar(180)
+  productSlug  String @db.VarChar(200)
+  variantLabel String @db.VarChar(120)
+  sku          String @db.VarChar(64)
+  imageUrl     String? @db.VarChar(512)
+
+  unitPriceCents Int
+  quantity       Int
+  lineTotalCents Int
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderAddress {
+  id      String      @id @default(uuid()) @db.Uuid
+  orderId String      @db.Uuid
+  kind    AddressKind
+
+  country   String  @db.VarChar(80)
+  state     String  @db.VarChar(80)
+  city      String  @db.VarChar(80)
+  district  String  @db.VarChar(80)
+  street    String  @db.VarChar(255)
+  apartment String? @db.VarChar(120)
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, kind])
+  @@map("order_addresses")
+}
+
+// Bitacora de verificacion de pagos: quien cambio el estado y cuando.
+model OrderStatusHistory {
+  id      String       @id @default(uuid()) @db.Uuid
+  orderId String       @db.Uuid
+  from    OrderStatus?
+  to      OrderStatus
+  note    String?      @db.Text
+
+  // Nulo cuando la transicion la genera el sistema y no un administrador.
+  changedById String? @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedBy User? @relation(fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
+}
+
+// ---------------------------------------------------------------------------
+// Configuracion de la tienda
+// ---------------------------------------------------------------------------
+
+/**
+ * Datos de pago y de la empresa, editables desde el panel.
+ *
+ * Vivian en variables de entorno hasta que el codigo QR de Yape paso a subirse
+ * desde administracion: mantener la imagen en base de datos y el numero de
+ * telefono en el entorno obligaria a un despliegue para cambiar la mitad de
+ * una misma cuenta. Ahora el entorno solo aporta los valores iniciales con los
+ * que se siembra esta fila.
+ *
+ * Es una tabla de una sola fila. El identificador fijo hace imposible crear una
+ * segunda por accidente y permite leerla sin ordenar ni filtrar.
+ */
+model StoreSettings {
+  id String @id @default("singleton")
+
+  companyName  String @db.VarChar(200)
+  companyRuc   String @db.VarChar(11)
+  companyEmail String @db.VarChar(255)
+  whatsapp     String @db.VarChar(20)
+
+  yapePhone String  @db.VarChar(20)
+  // Ruta publica de la imagen subida. Nula mientras no se cargue ninguna.
+  yapeQrUrl String? @db.VarChar(512)
+
+  // Plazo para acreditar el pago offline antes de cancelar la orden.
+  paymentWindowHours Int @default(2)
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?  @db.Uuid
+
+  updatedBy    User?         @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+  bankAccounts BankAccount[]
+
+  @@map("store_settings")
+}
+
+model BankAccount {
+  id            String @id @default(uuid()) @db.Uuid
+  settingsId    String
+  bank          String @db.VarChar(80)
+  accountNumber String @db.VarChar(40)
+  cci           String @db.VarChar(40)
+  position      Int    @default(0)
+
+  settings StoreSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+
+  @@index([settingsId, position])
+  @@map("bank_accounts")
+}
+
+/**
+ * Archivo subido desde el panel.
+ *
+ * Se registra en base de datos ademas de guardarse en disco para poder listar
+ * lo subido, saber quien lo hizo y detectar huerfanos sin recorrer el sistema
+ * de archivos.
+ */
+model MediaAsset {
+  id       String @id @default(uuid()) @db.Uuid
+  /** Nombre en disco, generado por el sistema. Nunca el que envio el cliente. */
+  filename String @unique @db.VarChar(160)
+  /** Nombre original, solo informativo para el panel. */
+  originalName String @db.VarChar(255)
+  mimeType     String @db.VarChar(80)
+  sizeBytes    Int
+  url          String @db.VarChar(512)
+
+  createdAt    DateTime @default(now())
+  uploadedById String?  @db.Uuid
+
+  uploadedBy User? @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("media_assets")
+}

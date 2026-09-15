@@ -1,69 +1,135 @@
+import Link from "next/link";
 import Image from "next/image";
+import { listCategories, listProducts } from "@/lib/api/catalog";
+import { ProductGrid } from "@/components/catalog/product-grid";
+import { ButtonLink } from "@/components/ui/button";
+import { ArrowRightIcon } from "@/components/icons";
 
-export default function Home() {
+export default async function HomePage() {
+  // Ambas lecturas son independientes: pedirlas en paralelo evita encadenar
+  // dos viajes de red antes de poder pintar nada.
+  const [featured, categories] = await Promise.all([
+    listProducts({ featured: true, perPage: 3, sort: "newest" }),
+    listCategories(),
+  ]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      {/* --- Portada editorial --------------------------------------------- */}
+      <section className="border-b border-line bg-canvas">
+        <div className="shell grid items-center gap-12 py-20 md:py-28 lg:grid-cols-12 lg:gap-16 lg:py-32">
+          <div className="lg:col-span-7">
+            <p className="label-caps text-accent">Coleccion 2026</p>
+            <h1 className="font-display mt-6 text-6xl sm:text-7xl lg:text-8xl xl:text-9xl">
+              Entrena
+              <br />
+              sin excusas
+            </h1>
+            <p className="mt-8 max-w-md text-lg leading-relaxed text-steel">
+              Prendas tecnicas construidas para el esfuerzo real. Tejidos que
+              respiran, costuras que aguantan y cortes que no estorban.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <ButtonLink href="/tienda" variant="primary" size="lg">
+                Ver coleccion
+                <ArrowRightIcon className="size-4" />
+              </ButtonLink>
+              <ButtonLink href="/tienda/casacas" variant="outline" size="lg">
+                Casacas
+              </ButtonLink>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5">
+            <div className="relative aspect-4/5 overflow-hidden bg-mist">
+              <Image
+                src="/products/casaca-cortavientos-ridge-negro.svg"
+                alt="Casaca cortavientos de la coleccion 2026"
+                fill
+                sizes="(min-width: 1024px) 40vw, 100vw"
+                priority
+                className="object-cover"
+              />
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </section>
+
+      {/* --- Destacados ---------------------------------------------------- */}
+      <section className="shell py-20 md:py-28">
+        <div className="flex items-end justify-between gap-6 border-b border-line pb-6">
+          <div>
+            <p className="label-caps text-ash">Seleccion</p>
+            <h2 className="font-display mt-2 text-4xl md:text-5xl">Lo mas pedido</h2>
+          </div>
+          <Link
+            href="/tienda"
+            className="label-caps hidden items-center gap-2 text-ink transition-colors hover:text-accent sm:inline-flex"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Ver todo
+            <ArrowRightIcon className="size-4" />
+          </Link>
         </div>
-      </main>
-    </div>
+
+        <div className="mt-12">
+          <ProductGrid products={featured.items} />
+        </div>
+      </section>
+
+      {/* --- Categorias ---------------------------------------------------- */}
+      <section className="border-t border-line bg-canvas">
+        <div className="shell py-20 md:py-28">
+          <h2 className="font-display text-4xl md:text-5xl">Compra por categoria</h2>
+
+          <ul className="mt-12 grid gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+            {categories.map((category) => (
+              <li key={category.id}>
+                <Link
+                  href={`/tienda/${category.slug}`}
+                  className="group flex h-full flex-col justify-between gap-10 bg-paper p-8 transition-colors hover:bg-ink hover:text-paper"
+                >
+                  <div>
+                    <h3 className="font-display text-3xl">{category.name}</h3>
+                    <p className="mt-3 text-sm leading-relaxed text-muted group-hover:text-ash">
+                      {category.description}
+                    </p>
+                  </div>
+                  <span className="label-caps inline-flex items-center gap-2">
+                    {category.productCount}{" "}
+                    {category.productCount === 1 ? "modelo" : "modelos"}
+                    <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* --- Garantias ----------------------------------------------------- */}
+      <section className="shell py-20 md:py-24">
+        <ul className="grid gap-10 sm:grid-cols-3">
+          {[
+            {
+              title: "Envio a todo el Peru",
+              body: "Lima en 2 a 4 dias habiles. Provincias por agencia en 4 a 7 dias.",
+            },
+            {
+              title: "Cambio de talla gratuito",
+              body: "Treinta dias para cambiar la talla si la prenda no te queda.",
+            },
+            {
+              title: "Pago con Yape, Plin o transferencia",
+              body: "Confirmamos tu pedido apenas verificamos el abono.",
+            },
+          ].map((item) => (
+            <li key={item.title} className="border-t border-ink pt-6">
+              <h3 className="label-caps">{item.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">{item.body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </>
   );
 }
