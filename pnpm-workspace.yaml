@@ -1,0 +1,15 @@
+packages:
+  - "apps/*"
+
+# pnpm 11 exige aprobar explicitamente que scripts de instalacion pueden
+# ejecutarse. Solo se habilitan los imprescindibles.
+allowBuilds:
+  # Descargan los motores nativos de Prisma. Sin esto no hay cliente.
+  "@prisma/engines": true
+  prisma: true
+  # tsx lo usa para ejecutar el seed en TypeScript.
+  esbuild: true
+  # Aceleraciones nativas opcionales: no aportan nada aqui.
+  msgpackr-extract: false
+  sharp: false
+  unrs-resolver: false
